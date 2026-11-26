@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, chmodSync } from "node:fs";
+import { mkdirSync, writeFileSync, chmodSync, readFileSync } from "node:fs";
 
 // Funniest One-Line Performance Review — writes one performance review
 // (1-140 chars) to /output/entry.txt: the funniest one-line review an AI
@@ -21,3 +21,11 @@ const outDir = slash >= 0 ? outPath.slice(0, slash) || "/" : ".";
 mkdirSync(outDir, { recursive: true });
 writeFileSync(outPath, MESSAGE + "\n", "utf8");
 chmodSync(outPath, 0o644);
+
+// Verify what landed on disk: read it back and confirm it is still
+// exactly the one line we meant to write, so a partial write or a
+// stray newline can never silently ship a broken entry.
+const written = readFileSync(outPath, "utf8");
+if (written !== MESSAGE + "\n") {
+  throw new Error("entry.txt verification failed: written content differs from MESSAGE");
+}
